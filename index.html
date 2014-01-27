@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Youtube Stream!!</title>
+    <title>Youtube Radio</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
   </head>
   <body>
+    <h1 class="title"></h1>
     <div id="movie-wrap">
       <div id="movie-div"></div>
     </div>
@@ -46,6 +47,16 @@
       setTimeout(function(){$(window).bind('hashchange', onHashChange);}, 0);
     }
 
+    function setTitle(title) {
+      if( !title ) {
+        $('h1.title').text('Youtube Radio');
+      } else {
+        $('h1.title').text(title);
+        title = 'Youtube Radio : ' + title;
+        document.title = title;
+      }
+    }
+
     function onYouTubeIframeAPIReady() {
       onHashChange();
 
@@ -54,19 +65,26 @@
       $('input[name=btn-play]').click(function() {
           var videoId = $('input[name=youtube-id]').val();
           changeVideo(videoId);
-          });
+        });
       $('input[name=btn-next]').click(function() {
-          if( player )
-          getNextVideo();
-          });
+          if( player ) getNextVideo();
+        });
       $('input[name=youtube-id]').val(favorite.getRandomElement());
     }
 
     function changeVideo(id) {
       playerID = id;
 
-      if( playerID )
+      if( !playerID ) {
+        setTitle('');
+      }
+
+      if( playerID ) {
         $('input[name=youtube-id]').val(playerID);
+        $.get('https://gdata.youtube.com/feeds/api/videos/' + id + '?v=2&alt=json', function(data) {
+          setTitle(data.entry.title['$t']);
+        }, 'json');
+      }
 
       if( player ) {
         player.loadVideoById(id);
@@ -90,17 +108,25 @@
     }
 
     function getNextVideo() {
-      $.get('https://gdata.youtube.com/feeds/api/videos/' + playerID + '/related?v=2', function(data) {
-            var ids = $(data).find('entry > id');
-            if( ids.size() == 0 ) {
+      $.get('https://gdata.youtube.com/feeds/api/videos/' + playerID + '/related?v=2&alt=json', function(data) {
+            var entries = data.feed.entry.filter(function(e) {
+              var acc = e['yt$accessControl'];
+              for( var i in acc ) {
+                if( acc[i].action == 'embed' && acc[i].permission == 'allowed' )
+                  return true;
+              }
+              return false;
+            });
+
+            if( entries.length == 0 ) {
               alert('no related video!');
               return;
             }
-            var selected = Math.floor(Math.random() * ids.size());
-            var id = ids.eq(selected).text().split(':')[3];
+            var selected = Math.floor(Math.random() * entries.length);
+            var id = entries[selected]['media$group']['yt$videoid']['$t'];
             changeVideo(id);
           },
-          'xml');
+          'json');
     }
 
     function onPlayerStateChange(event) {
