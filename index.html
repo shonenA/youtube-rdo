@@ -1,107 +1,113 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Youtube Stream!!</title>
-        <link href="/bootstrap/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
-    </head>
-    <body>
-        <div id="movie-wrap">
-            <div id="movie-div"></div>
-        </div>
-        <input type="text" name="youtube-id" placeholder="Youtube id" />
-        <input type="button" class="btn" name="btn-play" value="PLAY" />
-        <input type="button" class="btn" name="btn-next" value="NEXT" />
+  <head>
+    <title>Youtube Stream!!</title>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="movie-wrap">
+      <div id="movie-div"></div>
+    </div>
+    <form class="form-inline">
+      <div class="form-group">
+        <input type="text" class="form-control" name="youtube-id" placeholder="Youtube id" />
+      </div>
+      <div class="form-group">
+        <input type="button" class="btn btn-default" name="btn-play" value="PLAY" />
+        <input type="button" class="btn btn-default" name="btn-next" value="NEXT" />
+      </div>
+    </form>
 
-        <script src="/script/jquery.min.js"></script>
-        <script>
-            var favorite = ['LZSnoaLWCVU', 'lO59nQ8xy98', 'j61CfhcqheY'];
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script>
+    var favorite = ['LZSnoaLWCVU', 'lO59nQ8xy98', 'j61CfhcqheY'];
 
-            Array.prototype.getRandomElement = function() {
-                if( this.length == 0 ) return null;
-                return this[Math.floor( Math.random()*this.length )];
+    Array.prototype.getRandomElement = function() {
+      if( this.length == 0 ) return null;
+      return this[Math.floor( Math.random()*this.length )];
+    }
+
+    var tag = document.createElement('script');
+
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var player = null;
+    var playerID;
+
+    function onHashChange() {
+      changeVideo(location.hash.substr(1));
+    }
+
+    function changeHashSafely(hash) {
+      $(window).unbind('hashchange', onHashChange);
+      location.hash = hash;
+      setTimeout(function(){$(window).bind('hashchange', onHashChange);}, 0);
+    }
+
+    function onYouTubeIframeAPIReady() {
+      onHashChange();
+
+      $(window).bind('hashchange', onHashChange);
+
+      $('input[name=btn-play]').click(function() {
+          var videoId = $('input[name=youtube-id]').val();
+          changeVideo(videoId);
+          });
+      $('input[name=btn-next]').click(function() {
+          if( player )
+          getNextVideo();
+          });
+      $('input[name=youtube-id]').val(favorite.getRandomElement());
+    }
+
+    function changeVideo(id) {
+      playerID = id;
+
+      if( playerID )
+        $('input[name=youtube-id]').val(playerID);
+
+      if( player ) {
+        player.loadVideoById(id);
+      } else {
+        player = new YT.Player('movie-div', {
+          height: 390,
+          width: 640,
+          videoId: id,
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+
+      changeHashSafely('#' + id);
+    }
+
+    function onPlayerReady(event) {
+      event.target.playVideo();
+    }
+
+    function getNextVideo() {
+      $.get('https://gdata.youtube.com/feeds/api/videos/' + playerID + '/related?v=2', function(data) {
+            var ids = $(data).find('entry > id');
+            if( ids.size() == 0 ) {
+              alert('no related video!');
+              return;
             }
+            var selected = Math.floor(Math.random() * ids.size());
+            var id = ids.eq(selected).text().split(':')[3];
+            changeVideo(id);
+          },
+          'xml');
+    }
 
-            var tag = document.createElement('script');
-
-            tag.src = "https://www.youtube.com/iframe_api";
-            var firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-            var player = null;
-            var playerID;
-
-            function onHashChange() {
-                changeVideo(location.hash.substr(1));
-            }
-
-            function changeHashSafely(hash) {
-                $(window).unbind('hashchange', onHashChange);
-                location.hash = hash;
-                setTimeout(function(){$(window).bind('hashchange', onHashChange);}, 0);
-            }
-
-            function onYouTubeIframeAPIReady() {
-                onHashChange();
-
-                $(window).bind('hashchange', onHashChange);
-
-                $('input[name=btn-play]').click(function() {
-                    var videoId = $('input[name=youtube-id]').val();
-                    changeVideo(videoId);
-                });
-                $('input[name=btn-next]').click(function() {
-                    if( player )
-                        getNextVideo();
-                });
-                $('input[name=youtube-id]').val(favorite.getRandomElement());
-            }
-
-            function changeVideo(id) {
-                playerID = id;
-
-                if( playerID )
-                    $('input[name=youtube-id]').val(playerID);
-
-                if( player ) {
-                    player.loadVideoById(id);
-                } else {
-                    player = new YT.Player('movie-div', {
-                        height: 390,
-                        width: 640,
-                        videoId: id,
-                        events: {
-                            'onReady': onPlayerReady,
-                            'onStateChange': onPlayerStateChange
-                        }
-                    });
-                }
-
-                changeHashSafely('#' + id);
-            }
-
-            function onPlayerReady(event) {
-                event.target.playVideo();
-            }
-
-            function getNextVideo() {
-                $.get('https://gdata.youtube.com/feeds/api/videos/' + playerID + '/related?v=2', function(data) {
-                    var ids = $(data).find('entry > id');
-                    if( ids.size() == 0 ) {
-                        alert('no related video!');
-                        return;
-                    }
-                    var selected = Math.floor(Math.random() * ids.size());
-                    var id = ids.eq(selected).text().split(':')[3];
-                    changeVideo(id);
-                },
-                'xml');
-            }
-
-            function onPlayerStateChange(event) {
-                if ( event.data == YT.PlayerState.ENDED ) {
-                    getNextVideo();
-                }
-            }
-        </script>
-    </body>
+    function onPlayerStateChange(event) {
+      if ( event.data == YT.PlayerState.ENDED ) {
+        getNextVideo();
+      }
+    }
+    </script>
+  </body>
 </html>
