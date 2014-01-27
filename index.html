@@ -29,8 +29,22 @@
 
             var player = null;
             var playerID;
-            function onYouTubeIframeAPIReady() {
+
+            function onHashChange() {
                 changeVideo(location.hash.substr(1));
+            }
+
+            function changeHashSafely(hash) {
+                $(window).unbind('hashchange', onHashChange);
+                location.hash = hash;
+                setTimeout(function(){$(window).bind('hashchange', onHashChange);}, 0);
+            }
+
+            function onYouTubeIframeAPIReady() {
+                onHashChange();
+
+                $(window).bind('hashchange', onHashChange);
+
                 $('input[name=btn-play]').click(function() {
                     var videoId = $('input[name=youtube-id]').val();
                     changeVideo(videoId);
@@ -62,7 +76,7 @@
                     });
                 }
 
-                location.hash = '#' + id;
+                changeHashSafely('#' + id);
             }
 
             function onPlayerReady(event) {
