@@ -3,21 +3,39 @@
   <head>
     <title>Youtube Radio</title>
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+    <style>
+    .side-history {
+      height: 390px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+    </style>
   </head>
   <body>
-    <h1 class="title"></h1>
-    <div id="movie-wrap">
-      <div id="movie-div"></div>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="title"><span class="glyphicon glyphicon-headphones"></span> Youtube Radio</h1>
+      </div>
+
+      <div class="row">
+        <div id="movie-wrap" class="col-xs-8">
+          <div id="movie-div"></div>
+        </div>
+        <div class="col-xs-4">
+          <ul class="side-history list-group"></ul>
+        </div>
+      </div>
+
+      <form class="form-inline">
+        <div class="form-group">
+          <input type="text" class="form-control" name="youtube-id" placeholder="Youtube id" />
+        </div>
+        <div class="form-group">
+          <input type="button" class="btn btn-default" name="btn-play" value="PLAY" />
+          <input type="button" class="btn btn-default" name="btn-next" value="NEXT" />
+        </div>
+      </form>
     </div>
-    <form class="form-inline">
-      <div class="form-group">
-        <input type="text" class="form-control" name="youtube-id" placeholder="Youtube id" />
-      </div>
-      <div class="form-group">
-        <input type="button" class="btn btn-default" name="btn-play" value="PLAY" />
-        <input type="button" class="btn btn-default" name="btn-next" value="NEXT" />
-      </div>
-    </form>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script>
@@ -38,7 +56,9 @@
     var playerID;
 
     function onHashChange() {
-      changeVideo(location.hash.substr(1));
+      var id = location.hash.substr(1);
+      history.add(id);
+      changeVideo(id);
     }
 
     function changeHashSafely(hash) {
@@ -48,14 +68,36 @@
     }
 
     function setTitle(title) {
-      if( !title ) {
-        $('h1.title').text('Youtube Radio');
-      } else {
-        $('h1.title').text(title);
-        title = 'Youtube Radio : ' + title;
+      if( title ) {
+        title = title + ' - Youtube Radio';
         document.title = title;
       }
     }
+
+    var history = (function() {
+      var entries = [];
+
+      this.add = function(id) {
+        if( entries.indexOf(id) != -1 ) return;
+        entries.push(id);
+        refresh();
+      }
+
+      this.clear = function() {
+        entries = [];
+        refresh();
+      }
+
+      function refresh() {
+        $('.side-history').text('');
+        entries.forEach(function(entry) {
+          var anchor = $('<a>').attr('href', '#' + entry).text(entry);
+          $('<li>').addClass('list-group-item').html(anchor).appendTo('.side-history');
+        });
+      }
+
+      return this;
+    })();
 
     function onYouTubeIframeAPIReady() {
       onHashChange();
@@ -64,6 +106,7 @@
 
       $('input[name=btn-play]').click(function() {
           var videoId = $('input[name=youtube-id]').val();
+          history.add(videoId);
           changeVideo(videoId);
         });
       $('input[name=btn-next]').click(function() {
@@ -91,7 +134,7 @@
       } else {
         player = new YT.Player('movie-div', {
           height: 390,
-          width: 640,
+          width: '100%',
           videoId: id,
           events: {
             'onReady': onPlayerReady,
@@ -124,6 +167,7 @@
             }
             var selected = Math.floor(Math.random() * entries.length);
             var id = entries[selected]['media$group']['yt$videoid']['$t'];
+            history.add(id);
             changeVideo(id);
           },
           'json');
