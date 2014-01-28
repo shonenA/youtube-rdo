@@ -29,7 +29,7 @@
           <div id="movie-div"></div>
         </div>
         <div class="col-xs-4">
-          <ul class="side-history list-group"></ul>
+          <div class="side-history list-group"></div>
         </div>
       </div>
 
@@ -94,7 +94,7 @@
       var entries = [];
 
       this.add = function(id) {
-        if( this.inHistory(id) ) return;
+        if( !id || this.inHistory(id) ) return;
         entries.push(id);
         refresh();
       }
@@ -108,9 +108,16 @@
         $('.side-history').text('');
         entries.forEach(function(entry) {
           var anchor = $('<a>').attr('href', '#' + entry).text(entry);
-          $('<li>').addClass('list-group-item').html(anchor).appendTo('.side-history');
+          anchor.addClass('list-group-item').appendTo('.side-history');
         });
         $('.side-history').animate({ scrollTop: $('.side-history').height() }, "slow");
+      }
+
+      this.active = function(id) {
+        var idx = entries.indexOf(id);
+        if( idx == -1 ) return;
+        $('.side-history a.active').removeClass('active');
+        $('.side-history a').eq(idx).addClass('active');
       }
 
       this.inHistory = function(id) {
@@ -168,6 +175,7 @@
       }
 
       changeHashSafely('#' + id);
+      History.active(id);
     }
 
     function onPlayerReady(event) {
