@@ -84,7 +84,7 @@
       var entries = [];
 
       this.add = function(id) {
-        if( entries.indexOf(id) != -1 ) return;
+        if( this.inHistory(id) ) return;
         entries.push(id);
         refresh();
       }
@@ -100,6 +100,11 @@
           var anchor = $('<a>').attr('href', '#' + entry).text(entry);
           $('<li>').addClass('list-group-item').html(anchor).appendTo('.side-history');
         });
+        $('.side-history').animate({ scrollTop: $('.side-history').height() }, "slow");
+      }
+
+      this.inHistory = function(id) {
+        return entries.indexOf(id) != -1;
       }
 
       return this;
@@ -159,6 +164,8 @@
     function getNextVideo() {
       $.get('https://gdata.youtube.com/feeds/api/videos/' + playerID + '/related?v=2&alt=json', function(data) {
             var entries = data.feed.entry.filter(function(e) {
+              if( History.inHistory(e['media$group']['yt$videoid']['$t']) )
+                return false;
               var acc = e['yt$accessControl'];
               for( var i in acc ) {
                 if( acc[i].action == 'embed' && acc[i].permission == 'allowed' )
