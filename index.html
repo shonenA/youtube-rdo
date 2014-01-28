@@ -137,7 +137,7 @@
         $('input[name=youtube-id]').val(playerID);
         $.get('https://gdata.youtube.com/feeds/api/videos/' + id + '?v=2&alt=json', function(data) {
           setTitle(data.entry.title['$t']);
-        }, 'json');
+        }, 'jsonp');
       }
 
       if( player ) {
@@ -183,7 +183,7 @@
             History.add(id);
             changeVideo(id);
           },
-          'json');
+          'jsonp');
     }
 
     function onPlayerStateChange(event) {
