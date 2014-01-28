@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Youtube Radio</title>
+
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
     <style>
     .side-history {
@@ -10,6 +12,10 @@
       overflow-x: hidden;
     }
     </style>
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"></script>
+    <![endif]-->
   </head>
   <body>
     <div class="container">
@@ -57,7 +63,7 @@
 
     function onHashChange() {
       var id = location.hash.substr(1);
-      history.add(id);
+      History.add(id);
       changeVideo(id);
     }
 
@@ -74,7 +80,7 @@
       }
     }
 
-    var history = (function() {
+    var History = (function() {
       var entries = [];
 
       this.add = function(id) {
@@ -106,7 +112,7 @@
 
       $('input[name=btn-play]').click(function() {
           var videoId = $('input[name=youtube-id]').val();
-          history.add(videoId);
+          History.add(videoId);
           changeVideo(videoId);
         });
       $('input[name=btn-next]').click(function() {
@@ -167,7 +173,7 @@
             }
             var selected = Math.floor(Math.random() * entries.length);
             var id = entries[selected]['media$group']['yt$videoid']['$t'];
-            history.add(id);
+            History.add(id);
             changeVideo(id);
           },
           'json');
