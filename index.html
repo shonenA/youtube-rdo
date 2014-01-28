@@ -37,8 +37,15 @@
           <input type="text" class="form-control" name="youtube-id" placeholder="Youtube id" />
         </div>
         <div class="form-group">
-          <input type="button" class="btn btn-default" name="btn-play" value="PLAY" />
-          <input type="button" class="btn btn-default" name="btn-next" value="NEXT" />
+          <button type="button" class="btn btn-default" name="btn-play">
+            <span class="glyphicon glyphicon-play"></span>
+          </button>
+          <button type="button" class="btn btn-default" name="btn-next">
+            <span class="glyphicon glyphicon-fast-forward"></span>
+          </button>
+          <button type="button" class="btn btn-default" name="btn-share">
+            <span class="glyphicon glyphicon-share"></span>
+          </button>
         </div>
       </form>
     </div>
@@ -60,6 +67,7 @@
 
     var player = null;
     var playerID;
+    var playerName;
 
     function onHashChange() {
       var id = location.hash.substr(1);
@@ -75,6 +83,7 @@
 
     function setTitle(title) {
       if( title ) {
+        playerName = title;
         title = title + ' - Youtube Radio';
         document.title = title;
       }
@@ -115,13 +124,16 @@
 
       $(window).bind('hashchange', onHashChange);
 
-      $('input[name=btn-play]').click(function() {
+      $('button[name=btn-play]').click(function() {
           var videoId = $('input[name=youtube-id]').val();
           History.add(videoId);
           changeVideo(videoId);
         });
-      $('input[name=btn-next]').click(function() {
+      $('button[name=btn-next]').click(function() {
           if( player ) getNextVideo();
+        });
+      $('button[name=btn-share]').click(function() {
+          if( player ) shareTwitter();
         });
       $('input[name=youtube-id]').val(favorite.getRandomElement());
     }
@@ -159,6 +171,15 @@
 
     function onPlayerReady(event) {
       event.target.playVideo();
+    }
+    
+    function shareTwitter() {
+      var text = 'Now Playing';
+      if( playerName ) {
+        text = playerName;
+      }
+      text = encodeURIComponent(text);
+      window.open('https://twitter.com/intent/tweet?url=http%3A//youtu.be/' + playerID + '&text=' + text+  ':', 'share-window', 'width=550,height=420');
     }
 
     function getNextVideo() {
