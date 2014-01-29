@@ -92,11 +92,22 @@
 
     var History = (function() {
       var entries = [];
+      var activeID = null;
 
       this.add = function(id) {
         if( !id || this.inHistory(id) ) return;
-        entries.push(id);
+        var activeIdx = entries.indexOf(activeID);
+        if( activeIdx != -1 ) {
+          entries.splice(activeIdx+1, 0, id);
+        } else {
+          entries.push(id);
+        }
         refresh();
+      }
+
+      this.delete = function(id) {
+        if( !id || this.inHistory(id) ) return;
+        entries.pop(entries.indexOf(id));
       }
 
       this.clear = function() {
@@ -110,14 +121,18 @@
           var anchor = $('<a>').attr('href', '#' + entry).text(entry);
           anchor.addClass('list-group-item').appendTo('.side-history');
         });
-        $('.side-history').animate({ scrollTop: $('.side-history').height() }, "slow");
+
       }
 
       this.active = function(id) {
         var idx = entries.indexOf(id);
         if( idx == -1 ) return;
+        activeID = id;
         $('.side-history a.active').removeClass('active');
         $('.side-history a').eq(idx).addClass('active');
+
+        var scrollPoint = $('.side-history').scrollTop() + $('.side-history .active').position().top - $('.side-history').height() / 2;
+        $('.side-history').animate({ scrollTop: scrollPoint }, "slow");
       }
 
       this.inHistory = function(id) {
