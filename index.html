@@ -38,6 +38,7 @@
           <input type="text" class="form-control" name="youtube-id" placeholder="Youtube id" />
         </div>
         <div class="form-group">
+          <input type="checkbox" name="chk-loop" />
           <button type="button" class="btn btn-default" name="btn-play">
             <span class="glyphicon glyphicon-play"></span>
           </button>
@@ -69,6 +70,7 @@
     var player = null;
     var playerID;
     var playerName;
+    var loop = null;
 
     function onHashChange() {
       var id = location.hash.substr(1);
@@ -158,6 +160,9 @@
       $('button[name=btn-share]').click(function() {
           if( player ) shareTwitter();
         });
+      $('input[name=chk-loop]').click(function() {
+          loop = $(this).is(':checked');
+        });
       $('input[name=youtube-id]').val(favorite.getRandomElement());
     }
 
@@ -233,6 +238,10 @@
 
     function onPlayerStateChange(event) {
       if ( event.data == YT.PlayerState.ENDED ) {
+        if( loop ) {
+          player.playVideo();
+          return;
+        }
         getNextVideo();
       }
     }
