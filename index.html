@@ -84,16 +84,24 @@
       setTimeout(function(){$(window).bind('hashchange', onHashChange);}, 0);
     }
 
-    function setTitle(title) {
+    function setTitle(title, id) {
       if( title ) {
         playerName = title;
-        title = title + ' - Youtube Radio';
-        document.title = title;
+        pageTitle = title + ' - Youtube Radio';
+        document.title = pageTitle;
+        var meta = History.findMeta(id);
+        if( meta )
+        {
+          meta.title = title;
+          History.setMeta(id, meta);
+          History.active(id);
+        }
       }
     }
 
     var History = (function() {
       var entries = [];
+      var meta = [];
       var activeID = null;
 
       this.add = function(id) {
@@ -101,29 +109,48 @@
         var activeIdx = entries.indexOf(activeID);
         if( activeIdx != -1 ) {
           entries.splice(activeIdx+1, 0, id);
+          meta.splice(activeIdx+1, 0, {});
         } else {
           entries.push(id);
+          meta.push({});
         }
         refresh();
       }
 
       this.delete = function(id) {
-        if( !id || this.inHistory(id) ) return;
-        entries.pop(entries.indexOf(id));
+        if( !id || !this.inHistory(id) ) return;
+        var idx = entries.indexOf(id);
+        entries.pop(idx);
+        meta.pop(idx);
+      }
+
+      this.findMeta = function(id) {
+        if( !id || !this.inHistory(id) ) return;
+        return meta[entries.indexOf(id)];
+      }
+
+      this.setMeta = function(id, m) {
+        if( !id || !this.inHistory(id) ) return;
+        meta[entries.indexOf(id)] = m;
+        refresh();
       }
 
       this.clear = function() {
         entries = [];
+        meta = [];
         refresh();
       }
 
       function refresh() {
         $('.side-history').text('');
-        entries.forEach(function(entry) {
-          var anchor = $('<a>').attr('href', '#' + entry).text(entry);
+        entries.forEach(function(entry, idx) {
+          var title = entry;
+          if( meta[idx].title ) {
+            title = meta[idx].title;
+          }
+          var anchor = $('<a>').attr('href', '#' + entry).text(title);
           anchor.addClass('list-group-item').appendTo('.side-history');
         });
-
       }
 
       this.active = function(id) {
@@ -170,13 +197,13 @@
       playerID = id;
 
       if( !playerID ) {
-        setTitle('');
+        setTitle();
       }
 
       if( playerID ) {
         $('input[name=youtube-id]').val(playerID);
         $.get('https://gdata.youtube.com/feeds/api/videos/' + id + '?v=2&alt=json', function(data) {
-          setTitle(data.entry.title['$t']);
+          setTitle(data.entry.title['$t'], id);
         }, 'jsonp');
       }
 
